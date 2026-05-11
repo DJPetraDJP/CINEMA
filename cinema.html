@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cinema Room</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            background:#111;
+            height:100vh;
+            width:100vw;
+            overflow:hidden;
+        }
+        .room {
+            position:relative;
+            width:100%;
+            height:100vh;
+        }
+        .curtain {
+            position:absolute;
+            top:10%;
+            width:24%;
+            height:72%;
+            background:#5C0F1F;
+            z-index:2;
+        }
+        .left  { left:0; }
+        .right { right:0; }
+        .screen {
+            position:absolute;
+            top:20%;
+            left:50%;
+            transform:translateX(-50%);
+            width:68%;
+            height:52%;
+            background:#000;
+            border:14px solid #222;
+            border-top:32px solid #1a1a1a;
+            z-index:3;
+            overflow:hidden;
+        }
+    </style>
+</head>
+<body>
+
+<div class="room">
+    <div class="curtain left"></div>
+    <div class="curtain right"></div>
+    <div class="screen" id="movieScreen"></div>
+</div>
+
+<script>
+    // === PUT YOUR X LINK HERE ===
+    document.getElementById('movieScreen').innerHTML = `
+        <blockquote class="twitter-video" data-lang="en">
+            <a href="https://x.com/USERNAME/status/POST_ID_HERE"></a>
+        </blockquote>
+        <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"><\/script>
+    `;
+</script>
+
+</body>
+</html>
