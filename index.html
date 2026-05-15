@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,29 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
     <title>Open Air Cinema</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background: #000; 
+            touch-action: none; 
+        }
+        #title, #movie-title {
+            position: absolute; 
+            left: 50%; 
+            transform: translateX(-50%);
+            color: #ffffff; 
+            font-family: Arial, Helvetica, sans-serif;
+            font-weight: bold; 
+            text-shadow: 0 0 20px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none; 
+            z-index: 100;
+            -webkit-text-stroke: 1.5px rgba(0,0,0,0.6); /* schärfere Buchstaben */
+            white-space: nowrap;
+        }
         #title {
-            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-            color: white; font-family: Arial, sans-serif; font-size: 8.5vw;
-            font-weight: bold; text-shadow: 0 0 20px rgba(0,0,0,0.9); 
-            z-index: 100; pointer-events: none; letter-spacing: 3px;
+            top: 20px;
+            font-size: 8.2vw;
+            letter-spacing: 4px;
+        }
+        #movie-title {
+            top: 95px;           /* direkt unter "OPEN AIR CINEMA" */
+            font-size: 5.2vw;
+            letter-spacing: 2.5px;
         }
         #controls {
-            position: absolute; bottom: 20px; left: 20px; z-index: 100;
-            display: grid; grid-template-columns: 60px 60px 60px; gap: 8px;
+            position: absolute; 
+            bottom: 20px; 
+            left: 20px; 
+            z-index: 100;
+            display: grid; 
+            grid-template-columns: 60px 60px 60px; 
+            gap: 8px;
         }
         .btn {
-            width: 60px; height: 60px; background: rgba(255,255,255,0.25);
-            color: white; border: 2px solid rgba(255,255,255,0.6);
-            border-radius: 12px; font-size: 32px; display: flex;
-            align-items: center; justify-content: center;
+            width: 60px; 
+            height: 60px; 
+            background: rgba(255,255,255,0.25);
+            color: white; 
+            border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 12px; 
+            font-size: 32px; 
+            display: flex;
+            align-items: center; 
+            justify-content: center;
         }
-        canvas { display: block; }
+        canvas { 
+            display: block; 
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
     <div id="title">OPEN AIR CINEMA</div>
+    <div id="movie-title">MOVIE TITLE</div>
 
     <div id="controls">
         <div></div><div class="btn" id="up">↑</div><div></div>
@@ -38,9 +73,6 @@
     </div>
 
     <script>
-        // =============================================
-        // VIDEO URL – HIER ÄNDERN
-        // =============================================
         const videoURL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
 
         const scene = new THREE.Scene();
@@ -64,13 +96,12 @@
         sand.rotation.x = -Math.PI / 2;
         scene.add(sand);
 
-        // Ocean left
+        // Ocean, Trees, Sofas, Screen (unverändert)
         const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
         ocean.rotation.x = -Math.PI / 2;
         ocean.position.set(-35, 0.2, -10);
         scene.add(ocean);
 
-        // Fluffy Pink Trees
         function createPinkTree(x, z) {
             const group = new THREE.Group();
             const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 7, 8), new THREE.MeshLambertMaterial({ color: 0x8B5A2B }));
@@ -81,11 +112,8 @@
             group.position.set(x, 0, z);
             scene.add(group);
         }
-        createPinkTree(-18, -15);
-        createPinkTree(22, -18);
-        createPinkTree(-25, 5);
+        createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
 
-        // Large Pink Sofas facing screen
         function createSofa(x, z) {
             const sofa = new THREE.Group();
             const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 2.2), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
@@ -98,31 +126,13 @@
         }
         createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-        // Large Screen
-        const screenGeo = new THREE.PlaneGeometry(24, 13.5);
-        const screenMat = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
-        const screen = new THREE.Mesh(screenGeo, screenMat);
+        const screen = new THREE.Mesh(new THREE.PlaneGeometry(24, 13.5), new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide }));
         screen.position.set(0, 8.5, -32);
         scene.add(screen);
 
-        // Title under screen
-        const titleDiv = document.createElement('div');
-        titleDiv.style.position = 'absolute';
-        titleDiv.style.color = '#ffffff';
-        titleDiv.style.fontSize = '5.8vw';
-        titleDiv.style.fontWeight = 'bold';
-        titleDiv.style.textAlign = 'center';
-        titleDiv.style.top = '43%';
-        titleDiv.style.left = '50%';
-        titleDiv.style.transform = 'translate(-50%, -50%)';
-        titleDiv.style.textShadow = '0 0 25px #000';
-        titleDiv.style.pointerEvents = 'none';
-        titleDiv.innerHTML = 'MOVIE TITLE';
-        document.body.appendChild(titleDiv);
-
         camera.position.set(0, 6, 25);
 
-        // Touch + Buttons
+        // Steuerung & Video (unverändert)
         let yaw = 0, isDragging = false, prevX = 0;
         renderer.domElement.addEventListener('touchstart', e => { if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; }});
         renderer.domElement.addEventListener('touchmove', e => {
@@ -146,11 +156,12 @@
         btn('left', v => moveL = v);
         btn('right', v => moveR = v);
 
-        // Video
         let playing = false;
         const video = document.createElement('video');
         video.style.display = 'none';
         document.body.appendChild(video);
+
+        const movieTitleDiv = document.getElementById('movie-title');
 
         renderer.domElement.addEventListener('click', e => {
             const ray = new THREE.Raycaster();
@@ -168,15 +179,15 @@
                         const tex = new THREE.VideoTexture(video);
                         tex.repeat.set(sx, sy);
                         tex.offset.set((1-sx)/2, (1-sy)/2);
-                        screenMat.map = tex;
-                        screenMat.needsUpdate = true;
+                        screen.material.map = tex;
+                        screen.material.needsUpdate = true;
                     };
-                    video.play().then(() => { playing = true; titleDiv.style.display = 'none'; });
+                    video.play().then(() => { playing = true; movieTitleDiv.style.display = 'none'; });
                 } else {
                     video.pause();
-                    screenMat.map = null;
+                    screen.material.map = null;
                     playing = false;
-                    titleDiv.style.display = 'block';
+                    movieTitleDiv.style.display = 'block';
                 }
             }
         });
