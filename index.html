@@ -1,22 +1,209 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WE ❤ CINEMA </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
+    <title>Open Air Cinema</title>
     <style>
-        body { margin:0; padding:0; height:100vh; background:#1a1a1a; color:#fff; font-family:system-ui; display:flex; align-items:center; justify-content:center; text-align:center; }
-        .box { max-width:380px; }
-        h1 { font-size:3rem; color:#e5d5b8; margin:0; }
-        p { font-size:1.2rem; opacity:0.9; }
-        a { display:inline-block; margin-top:40px; padding:18px 45px; background:#e5d5b8; color:#1a1a1a; font-size:1.4rem; font-weight:bold; border-radius:50px; text-decoration:none; }
+        body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
+        #title {
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            color: white; font-family: Arial, sans-serif; font-size: 8.5vw;
+            font-weight: bold; text-shadow: 0 0 20px rgba(0,0,0,0.9); 
+            z-index: 100; pointer-events: none; letter-spacing: 3px;
+        }
+        #controls {
+            position: absolute; bottom: 20px; left: 20px; z-index: 100;
+            display: grid; grid-template-columns: 60px 60px 60px; gap: 8px;
+        }
+        .btn {
+            width: 60px; height: 60px; background: rgba(255,255,255,0.25);
+            color: white; border: 2px solid rgba(255,255,255,0.6);
+            border-radius: 12px; font-size: 32px; display: flex;
+            align-items: center; justify-content: center;
+        }
+        canvas { display: block; }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
 </head>
 <body>
-    <div class="box">
-        <h1>CINEMA</h1>
-        <p> MOVIE</p>
-        <a href="cinema.html">ENTER THE CINEMA</a>
+    <div id="title">OPEN AIR CINEMA</div>
+
+    <div id="controls">
+        <div></div><div class="btn" id="up">↑</div><div></div>
+        <div class="btn" id="left">←</div>
+        <div class="btn" id="down">↓</div>
+        <div class="btn" id="right">→</div>
     </div>
+
+    <script>
+        // =============================================
+        // VIDEO URL – HIER ÄNDERN
+        // =============================================
+        const videoURL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.Fog(0x88aaff, 40, 150);
+
+        const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x88aaff);
+
+        const sun = new THREE.DirectionalLight(0xffeecc, 1.2);
+        sun.position.set(25, 60, 30);
+        scene.add(sun);
+        scene.add(new THREE.AmbientLight(0xaaccff, 0.7));
+
+        // Sand
+        const sand = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
+        sand.rotation.x = -Math.PI / 2;
+        scene.add(sand);
+
+        // Ocean left
+        const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
+        ocean.rotation.x = -Math.PI / 2;
+        ocean.position.set(-35, 0.2, -10);
+        scene.add(ocean);
+
+        // Fluffy Pink Trees
+        function createPinkTree(x, z) {
+            const group = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 7, 8), new THREE.MeshLambertMaterial({ color: 0x8B5A2B }));
+            trunk.position.y = 3.5;
+            const foliage = new THREE.Mesh(new THREE.SphereGeometry(4.5, 10, 10), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
+            foliage.position.y = 9;
+            group.add(trunk); group.add(foliage);
+            group.position.set(x, 0, z);
+            scene.add(group);
+        }
+        createPinkTree(-18, -15);
+        createPinkTree(22, -18);
+        createPinkTree(-25, 5);
+
+        // Large Pink Sofas facing screen
+        function createSofa(x, z) {
+            const sofa = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 2.2), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
+            base.position.y = 0.9; sofa.add(base);
+            const back = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.8, 0.5), new THREE.MeshLambertMaterial({ color: 0xff4d94 }));
+            back.position.set(0, 1.8, -0.8); sofa.add(back);
+            sofa.rotation.y = Math.PI;
+            sofa.position.set(x, 0, z);
+            scene.add(sofa);
+        }
+        createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
+
+        // Large Screen
+        const screenGeo = new THREE.PlaneGeometry(24, 13.5);
+        const screenMat = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide });
+        const screen = new THREE.Mesh(screenGeo, screenMat);
+        screen.position.set(0, 8.5, -32);
+        scene.add(screen);
+
+        // Title under screen
+        const titleDiv = document.createElement('div');
+        titleDiv.style.position = 'absolute';
+        titleDiv.style.color = '#ffffff';
+        titleDiv.style.fontSize = '5.8vw';
+        titleDiv.style.fontWeight = 'bold';
+        titleDiv.style.textAlign = 'center';
+        titleDiv.style.top = '43%';
+        titleDiv.style.left = '50%';
+        titleDiv.style.transform = 'translate(-50%, -50%)';
+        titleDiv.style.textShadow = '0 0 25px #000';
+        titleDiv.style.pointerEvents = 'none';
+        titleDiv.innerHTML = 'MOVIE TITLE';
+        document.body.appendChild(titleDiv);
+
+        camera.position.set(0, 6, 25);
+
+        // Touch + Buttons
+        let yaw = 0, isDragging = false, prevX = 0;
+        renderer.domElement.addEventListener('touchstart', e => { if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; }});
+        renderer.domElement.addEventListener('touchmove', e => {
+            if (isDragging) {
+                yaw -= (e.touches[0].clientX - prevX) * 0.0038;
+                camera.rotation.set(0, yaw, 0);
+                prevX = e.touches[0].clientX;
+            }
+        });
+        renderer.domElement.addEventListener('touchend', () => isDragging = false);
+
+        let moveF = false, moveB = false, moveL = false, moveR = false;
+        const speed = 0.24;
+
+        function btn(id, dir) {
+            document.getElementById(id).addEventListener('touchstart', e => { e.preventDefault(); dir(true); });
+            document.getElementById(id).addEventListener('touchend', e => { e.preventDefault(); dir(false); });
+        }
+        btn('up', v => moveF = v);
+        btn('down', v => moveB = v);
+        btn('left', v => moveL = v);
+        btn('right', v => moveR = v);
+
+        // Video
+        let playing = false;
+        const video = document.createElement('video');
+        video.style.display = 'none';
+        document.body.appendChild(video);
+
+        renderer.domElement.addEventListener('click', e => {
+            const ray = new THREE.Raycaster();
+            ray.setFromCamera(new THREE.Vector2((e.clientX / window.innerWidth)*2-1, -(e.clientY / window.innerHeight)*2+1), camera);
+            if (ray.intersectObject(screen).length > 0) {
+                if (!playing) {
+                    video.src = videoURL;
+                    video.loop = true;
+                    video.onloadedmetadata = () => {
+                        const vAspect = video.videoWidth / video.videoHeight;
+                        const sAspect = 24 / 13.5;
+                        let sx = 1, sy = 1;
+                        if (vAspect > sAspect) sy = sAspect / vAspect;
+                        else sx = vAspect / sAspect;
+                        const tex = new THREE.VideoTexture(video);
+                        tex.repeat.set(sx, sy);
+                        tex.offset.set((1-sx)/2, (1-sy)/2);
+                        screenMat.map = tex;
+                        screenMat.needsUpdate = true;
+                    };
+                    video.play().then(() => { playing = true; titleDiv.style.display = 'none'; });
+                } else {
+                    video.pause();
+                    screenMat.map = null;
+                    playing = false;
+                    titleDiv.style.display = 'block';
+                }
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dir = new THREE.Vector3();
+            if (moveF) dir.z -= 1;
+            if (moveB) dir.z += 1;
+            if (moveL) dir.x -= 1;
+            if (moveR) dir.x += 1;
+            if (dir.length() > 0) {
+                dir.normalize().applyQuaternion(camera.quaternion);
+                dir.y = 0;
+                camera.position.addScaledVector(dir, speed);
+                camera.position.x = Math.max(-40, Math.min(40, camera.position.x));
+                camera.position.z = Math.max(-5, Math.min(35, camera.position.z));
+            }
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
 </body>
 </html>
