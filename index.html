@@ -159,6 +159,8 @@
         let playing = false;
         const video = document.createElement('video');
         video.style.display = 'none';
+        video.muted = false;           // Sound is already working
+        video.playsInline = true;
         document.body.appendChild(video);
 
         const movieTitleDiv = document.getElementById('movie-title');
@@ -166,23 +168,30 @@
         renderer.domElement.addEventListener('click', e => {
             const ray = new THREE.Raycaster();
             ray.setFromCamera(new THREE.Vector2((e.clientX / window.innerWidth)*2-1, -(e.clientY / window.innerHeight)*2+1), camera);
+            
             if (ray.intersectObject(screen).length > 0) {
                 if (!playing) {
                     video.src = videoURL;
                     video.loop = true;
+                    
                     video.onloadedmetadata = () => {
                         const vAspect = video.videoWidth / video.videoHeight;
                         const sAspect = 24 / 13.5;
                         let sx = 1, sy = 1;
                         if (vAspect > sAspect) sy = sAspect / vAspect;
                         else sx = vAspect / sAspect;
+                        
                         const tex = new THREE.VideoTexture(video);
                         tex.repeat.set(sx, sy);
                         tex.offset.set((1-sx)/2, (1-sy)/2);
                         screen.material.map = tex;
                         screen.material.needsUpdate = true;
                     };
-                    video.play().then(() => { playing = true; movieTitleDiv.style.display = 'none'; });
+                    
+                    video.play().then(() => { 
+                        playing = true; 
+                        movieTitleDiv.style.display = 'none'; 
+                    }).catch(err => console.log("Play error:", err));
                 } else {
                     video.pause();
                     screen.material.map = null;
