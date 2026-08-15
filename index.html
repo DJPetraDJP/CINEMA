@@ -21,7 +21,7 @@
             text-shadow: 0 0 20px rgba(0,0,0,0.95), 0 2px 4px rgba(0,0,0,0.8);
             pointer-events: none; 
             z-index: 100;
-            -webkit-text-stroke: 1.5px rgba(0,0,0,0.6); /* schärfere Buchstaben */
+            -webkit-text-stroke: 1.5px rgba(0,0,0,0.6);
             white-space: nowrap;
         }
         #title {
@@ -30,7 +30,7 @@
             letter-spacing: 4px;
         }
         #movie-title {
-            top: 95px;           /* direkt unter "OPEN AIR CINEMA" */
+            top: 95px;
             font-size: 5.2vw;
             letter-spacing: 2.5px;
         }
@@ -75,135 +75,198 @@
     <script>
     const audioURL = "https://raw.githubusercontent.com/DJPetraDJP/CINEMA/main/signal.mp3";
 
-        const scene = new THREE.Scene();
-        scene.fog = new THREE.Fog(0x88aaff, 40, 150);
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.Fog(0x88aaff, 40, 150);
 
-        const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    scene.background = new THREE.Color(0x88aaff);
+
+    const sun = new THREE.DirectionalLight(0xffeecc, 1.2);
+    sun.position.set(25, 60, 30);
+    scene.add(sun);
+    scene.add(new THREE.AmbientLight(0xaaccff, 0.7));
+
+    // Sand
+    const sand = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
+    sand.rotation.x = -Math.PI / 2;
+    scene.add(sand);
+
+    // Ocean, Trees, Sofas, Screen
+    const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
+    ocean.rotation.x = -Math.PI / 2;
+    ocean.position.set(-35, 0.2, -10);
+    scene.add(ocean);
+
+    function createPinkTree(x, z) {
+        const group = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 7, 8), new THREE.MeshLambertMaterial({ color: 0x8B5A2B }));
+        trunk.position.y = 3.5;
+        const foliage = new THREE.Mesh(new THREE.SphereGeometry(4.5, 10, 10), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
+        foliage.position.y = 9;
+        group.add(trunk); group.add(foliage);
+        group.position.set(x, 0, z);
+        scene.add(group);
+    }
+    createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
+
+    function createSofa(x, z) {
+        const sofa = new THREE.Group();
+        const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 2.2), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
+        base.position.y = 0.9; sofa.add(base);
+        const back = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.8, 0.5), new THREE.MeshLambertMaterial({ color: 0xff4d94 }));
+        back.position.set(0, 1.8, -0.8); sofa.add(back);
+        sofa.rotation.y = Math.PI;
+        sofa.position.set(x, 0, z);
+        scene.add(sofa);
+    }
+    createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
+
+    const screen = new THREE.Mesh(
+        new THREE.PlaneGeometry(24, 13.5),
+        new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide })
+    );
+    screen.position.set(0, 8.5, -32);
+    scene.add(screen);
+
+    camera.position.set(0, 6, 25);
+
+    // Controls
+    let yaw = 0, isDragging = false, prevX = 0;
+    renderer.domElement.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+            isDragging = true;
+            prevX = e.touches[0].clientX;
+        }
+    });
+    renderer.domElement.addEventListener('touchmove', e => {
+        if (isDragging) {
+            yaw -= (e.touches[0].clientX - prevX) * 0.0038;
+            camera.rotation.set(0, yaw, 0);
+            prevX = e.touches[0].clientX;
+        }
+    });
+    renderer.domElement.addEventListener('touchend', () => isDragging = false);
+
+    let moveF = false, moveB = false, moveL = false, moveR = false;
+    const speed = 0.24;
+
+    function btn(id, dir) {
+        document.getElementById(id).addEventListener('touchstart', e => { e.preventDefault(); dir(true); });
+        document.getElementById(id).addEventListener('touchend', e => { e.preventDefault(); dir(false); });
+    }
+    btn('up', v => moveF = v);
+    btn('down', v => moveB = v);
+    btn('left', v => moveL = v);
+    btn('right', v => moveR = v);
+
+    // ===== AUDIO =====
+    let playing = false;
+    const audio = new Audio();
+    audio.src = audioURL;
+    audio.loop = true;
+    audio.preload = "auto";
+    audio.crossOrigin = "anonymous";
+
+    const movieTitleDiv = document.getElementById('movie-title');
+
+    function toggleAudio() {
+        if (!playing) {
+            // Try to play
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    playing = true;
+                    movieTitleDiv.style.display = 'none';
+                    screen.material.color.setHex(0x222222); // slight visual feedback
+                }).catch(err => {
+                    console.error("Audio play failed:", err);
+                    // Fallback: try again after a short delay (sometimes helps on mobile)
+                    setTimeout(() => {
+                        audio.play().then(() => {
+                            playing = true;
+                            movieTitleDiv.style.display = 'none';
+                            screen.material.color.setHex(0x222222);
+                        }).catch(e => console.error("Retry failed:", e));
+                    }, 100);
+                });
+            }
+        } else {
+            audio.pause();
+            audio.currentTime = 0;
+            playing = false;
+            movieTitleDiv.style.display = 'block';
+            screen.material.color.setHex(0x111111);
+        }
+    }
+
+    // Handle both mouse click and touch
+    function onScreenInteract(clientX, clientY) {
+        const ray = new THREE.Raycaster();
+        const mouse = new THREE.Vector2(
+            (clientX / window.innerWidth) * 2 - 1,
+            -(clientY / window.innerHeight) * 2 + 1
+        );
+        ray.setFromCamera(mouse, camera);
+
+        if (ray.intersectObject(screen).length > 0) {
+            toggleAudio();
+        }
+    }
+
+    renderer.domElement.addEventListener('click', e => {
+        onScreenInteract(e.clientX, e.clientY);
+    });
+
+    // Better support for mobile / touch devices
+    let touchStartX = 0, touchStartY = 0;
+    renderer.domElement.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) {
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        }
+    }, { passive: true });
+
+    renderer.domElement.addEventListener('touchend', e => {
+        if (e.changedTouches.length === 1) {
+            const touch = e.changedTouches[0];
+            const dx = Math.abs(touch.clientX - touchStartX);
+            const dy = Math.abs(touch.clientY - touchStartY);
+
+            // Only count as a "tap" if the finger barely moved
+            if (dx < 12 && dy < 12) {
+                onScreenInteract(touch.clientX, touch.clientY);
+            }
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        document.body.appendChild(renderer.domElement);
+    });
 
-        scene.background = new THREE.Color(0x88aaff);
-
-        const sun = new THREE.DirectionalLight(0xffeecc, 1.2);
-        sun.position.set(25, 60, 30);
-        scene.add(sun);
-        scene.add(new THREE.AmbientLight(0xaaccff, 0.7));
-
-        // Sand
-        const sand = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
-        sand.rotation.x = -Math.PI / 2;
-        scene.add(sand);
-
-        // Ocean, Trees, Sofas, Screen (unverändert)
-        const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
-        ocean.rotation.x = -Math.PI / 2;
-        ocean.position.set(-35, 0.2, -10);
-        scene.add(ocean);
-
-        function createPinkTree(x, z) {
-            const group = new THREE.Group();
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 1.2, 7, 8), new THREE.MeshLambertMaterial({ color: 0x8B5A2B }));
-            trunk.position.y = 3.5;
-            const foliage = new THREE.Mesh(new THREE.SphereGeometry(4.5, 10, 10), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
-            foliage.position.y = 9;
-            group.add(trunk); group.add(foliage);
-            group.position.set(x, 0, z);
-            scene.add(group);
+    function animate() {
+        requestAnimationFrame(animate);
+        const dir = new THREE.Vector3();
+        if (moveF) dir.z -= 1;
+        if (moveB) dir.z += 1;
+        if (moveL) dir.x -= 1;
+        if (moveR) dir.x += 1;
+        if (dir.length() > 0) {
+            dir.normalize().applyQuaternion(camera.quaternion);
+            dir.y = 0;
+            camera.position.addScaledVector(dir, speed);
+            camera.position.x = Math.max(-40, Math.min(40, camera.position.x));
+            camera.position.z = Math.max(-5, Math.min(35, camera.position.z));
         }
-        createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
-
-        function createSofa(x, z) {
-            const sofa = new THREE.Group();
-            const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 2.2), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
-            base.position.y = 0.9; sofa.add(base);
-            const back = new THREE.Mesh(new THREE.BoxGeometry(4.8, 1.8, 0.5), new THREE.MeshLambertMaterial({ color: 0xff4d94 }));
-            back.position.set(0, 1.8, -0.8); sofa.add(back);
-            sofa.rotation.y = Math.PI;
-            sofa.position.set(x, 0, z);
-            scene.add(sofa);
-        }
-        createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
-
-        const screen = new THREE.Mesh(new THREE.PlaneGeometry(24, 13.5), new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.DoubleSide }));
-        screen.position.set(0, 8.5, -32);
-        scene.add(screen);
-
-        camera.position.set(0, 6, 25);
-
-        // Steuerung
-        let yaw = 0, isDragging = false, prevX = 0;
-        renderer.domElement.addEventListener('touchstart', e => { if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; }});
-        renderer.domElement.addEventListener('touchmove', e => {
-            if (isDragging) {
-                yaw -= (e.touches[0].clientX - prevX) * 0.0038;
-                camera.rotation.set(0, yaw, 0);
-                prevX = e.touches[0].clientX;
-            }
-        });
-        renderer.domElement.addEventListener('touchend', () => isDragging = false);
-
-        let moveF = false, moveB = false, moveL = false, moveR = false;
-        const speed = 0.24;
-
-        function btn(id, dir) {
-            document.getElementById(id).addEventListener('touchstart', e => { e.preventDefault(); dir(true); });
-            document.getElementById(id).addEventListener('touchend', e => { e.preventDefault(); dir(false); });
-        }
-        btn('up', v => moveF = v);
-        btn('down', v => moveB = v);
-        btn('left', v => moveL = v);
-        btn('right', v => moveR = v);
-
-        let playing = false;
-        const audio = new Audio(audioURL);
-        audio.loop = true;
-
-        const movieTitleDiv = document.getElementById('movie-title');
-
-        renderer.domElement.addEventListener('click', e => {
-            const ray = new THREE.Raycaster();
-            ray.setFromCamera(new THREE.Vector2((e.clientX / window.innerWidth)*2-1, -(e.clientY / window.innerHeight)*2+1), camera);
-            
-            if (ray.intersectObject(screen).length > 0) {
-                if (!playing) {
-                    audio.play().then(() => { 
-                        playing = true; 
-                        movieTitleDiv.style.display = 'none'; 
-                    }).catch(err => console.log("Play error:", err));
-                } else {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    playing = false;
-                    movieTitleDiv.style.display = 'block';
-                }
-            }
-        });
-
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            const dir = new THREE.Vector3();
-            if (moveF) dir.z -= 1;
-            if (moveB) dir.z += 1;
-            if (moveL) dir.x -= 1;
-            if (moveR) dir.x += 1;
-            if (dir.length() > 0) {
-                dir.normalize().applyQuaternion(camera.quaternion);
-                dir.y = 0;
-                camera.position.addScaledVector(dir, speed);
-                camera.position.x = Math.max(-40, Math.min(40, camera.position.x));
-                camera.position.z = Math.max(-5, Math.min(35, camera.position.z));
-            }
-            renderer.render(scene, camera);
-        }
-        animate();
+        renderer.render(scene, camera);
+    }
+    animate();
     </script>
 </body>
 </html>
