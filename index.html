@@ -150,7 +150,7 @@
 
     camera.position.set(0, 6, 25);
 
-    // ===== PINK UFO (bigger, lower, closer — clearly visible) =====
+    // ===== PINK UFO =====
     const ufo = new THREE.Group();
 
     const ufoPink = new THREE.MeshLambertMaterial({ color: 0xff66aa });
@@ -186,13 +186,13 @@
     }
 
     const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.4, 2.2, 6, 16, 1, true),
-        new THREE.MeshBasicMaterial({ color: 0xffaadd, transparent: true, opacity: 0.22, side: THREE.DoubleSide })
+        new THREE.CylinderGeometry(0.3, 1.8, 3.5, 16, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xffaadd, transparent: true, opacity: 0.25, side: THREE.DoubleSide })
     );
-    beam.position.y = -3.5;
+    beam.position.y = -2.2;
     ufo.add(beam);
 
-    ufo.position.set(0, 10, 0);
+    ufo.position.set(0, 2.5, 0);
     scene.add(ufo);
     let ufoTime = 0;
 
@@ -434,14 +434,19 @@
             videoTexture.needsUpdate = true;
         }
 
-        // UFO: closer ellipse, lower altitude — stays in view most of the time
-        ufoTime += 0.01;
-        const ufoAngle = ufoTime;
-        ufo.position.x = Math.cos(ufoAngle) * 10;
-        ufo.position.z = Math.sin(ufoAngle) * 8 - 2;
-        ufo.position.y = 9 + Math.sin(ufoTime * 1.5) * 1.2;
+        // UFO: hover near ground, rise up, come back down — while drifting slowly
+        ufoTime += 0.008;
+        // height: low ~2.2, high ~11
+        const heightWave = (Math.sin(ufoTime * 0.55) + 1) / 2; // 0..1
+        ufo.position.y = 2.2 + heightWave * 9;
+        // slow circle while rising/falling
+        const ufoAngle = ufoTime * 0.45;
+        ufo.position.x = Math.cos(ufoAngle) * 7;
+        ufo.position.z = Math.sin(ufoAngle) * 6 + 2;
         ufo.rotation.y = -ufoAngle + Math.PI / 2;
-        ufo.rotation.z = Math.sin(ufoTime * 1.2) * 0.1;
+        ufo.rotation.z = Math.sin(ufoTime * 0.9) * 0.08;
+        // beam stronger when low
+        beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => {
             l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i));
         });
