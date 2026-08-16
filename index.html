@@ -264,16 +264,19 @@
     const leftBlade = makeRollerblade(-0.3);
     const rightBlade = makeRollerblade(0.3);
 
-    // Start near camera side; walks forward toward screen (z decreases)
-    // Safe zone: z stays 2–9 so robot never hits sofas (sofas at z ≥ 12)
-    robot.position.set(0, 0, 8);
+    // Safe zone in front of sofas
+    robot.position.set(0, 0, 5);
     scene.add(robot);
 
-    // Robot: walk forward (toward screen), then back, repeat — slow
+    // Robot: slow left ↔ right, then circle (restored previous movement)
     let robotTime = 0;
-    const walkMinZ = 2;   // closest to screen (still clear of sofas)
-    const walkMaxZ = 9;   // back toward camera / open sand
-    const walkCenterX = 0;
+    const safeCenterX = 0;
+    const safeCenterZ = 5;
+    const leftRightRange = 8;
+    const circleRadius = 3.5;
+    const leftRightDuration = 14;
+    const circleDuration = 10;
+    const fullCycle = leftRightDuration + circleDuration;
 
     // Controls
     let yaw = 0, isDragging = false, prevX = 0;
@@ -389,25 +392,38 @@
             videoTexture.needsUpdate = true;
         }
 
-        // Walk forward (toward screen) then back — slow, stays clear of sofas
-        robotTime += 0.006;
-        const progress = (Math.sin(robotTime) + 1) / 2; // 0 → 1 → 0 smoothly
-        const targetZ = walkMaxZ + (walkMinZ - walkMaxZ) * progress;
-        // face direction of travel: when progress increasing → going forward (toward screen)
-        const goingForward = Math.cos(robotTime) > 0;
-        const faceAngle = goingForward ? Math.PI : 0;
+        // Slow left ↔ right, then circle — clear of sofas
+        robotTime += 0.008;
+        const tCycle = robotTime % fullCycle;
 
-        robot.position.x = walkCenterX;
+        let targetX, targetZ, faceAngle;
+
+        if (tCycle < leftRightDuration) {
+            const progress = tCycle / leftRightDuration;
+            const xOffset = Math.sin(progress * Math.PI * 2) * leftRightRange;
+            targetX = safeCenterX + xOffset;
+            targetZ = safeCenterZ;
+            const goingRight = Math.cos(progress * Math.PI * 2) > 0;
+            faceAngle = goingRight ? -Math.PI / 2 : Math.PI / 2;
+        } else {
+            const progress = (tCycle - leftRightDuration) / circleDuration;
+            const angle = progress * Math.PI * 2;
+            targetX = safeCenterX + Math.cos(angle) * circleRadius;
+            targetZ = safeCenterZ + Math.sin(angle) * circleRadius;
+            faceAngle = -angle + Math.PI / 2;
+        }
+
+        robot.position.x = targetX;
         robot.position.z = targetZ;
         robot.rotation.y = faceAngle;
-        robot.position.y = Math.abs(Math.sin(robotTime * 5)) * 0.1;
-        robot.rotation.z = Math.sin(robotTime * 2.5) * 0.06;
+        robot.position.y = Math.abs(Math.sin(robotTime * 4)) * 0.08;
+        robot.rotation.z = Math.sin(robotTime * 2) * 0.05;
 
         leftBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.22;
+            if (i > 0) c.rotation.x += 0.2;
         });
         rightBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.22;
+            if (i > 0) c.rotation.x += 0.2;
         });
 
         const dir = new THREE.Vector3();
