@@ -150,6 +150,58 @@
 
     camera.position.set(0, 6, 25);
 
+    // ===== PINK UFO =====
+    const ufo = new THREE.Group();
+
+    const ufoPink = new THREE.MeshLambertMaterial({ color: 0xff66aa });
+    const ufoPinkDark = new THREE.MeshLambertMaterial({ color: 0xee4488 });
+    const ufoDomeMat = new THREE.MeshLambertMaterial({ color: 0xffccee, transparent: true, opacity: 0.85 });
+    const ufoLightMat = new THREE.MeshBasicMaterial({ color: 0xffff88 });
+
+    // Saucer body (flat disc)
+    const saucer = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.8, 0.45, 24), ufoPink);
+    ufo.add(saucer);
+
+    // Lower rim
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(2.8, 3.0, 0.2, 24), ufoPinkDark);
+    rim.position.y = -0.28;
+    ufo.add(rim);
+
+    // Dome on top
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2), ufoDomeMat);
+    dome.position.y = 0.22;
+    ufo.add(dome);
+
+    // Small antenna on dome
+    const ufoAnt = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 6), new THREE.MeshLambertMaterial({ color: 0xff99cc }));
+    ufoAnt.position.y = 1.35;
+    ufo.add(ufoAnt);
+    const ufoAntBall = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
+    ufoAntBall.position.y = 1.6;
+    ufo.add(ufoAntBall);
+
+    // Lights under the rim
+    const ufoLights = [];
+    for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        const light = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), ufoLightMat);
+        light.position.set(Math.cos(a) * 2.5, -0.4, Math.sin(a) * 2.5);
+        ufo.add(light);
+        ufoLights.push(light);
+    }
+
+    // Soft beam under UFO
+    const beam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 1.4, 4, 16, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0xffaadd, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
+    );
+    beam.position.y = -2.4;
+    ufo.add(beam);
+
+    ufo.position.set(0, 14, 0);
+    scene.add(ufo);
+    let ufoTime = 0;
+
     // ===== PINK-RED ROLLERBLADE ROBOT WITH TRAY (original) =====
     const robot = new THREE.Group();
 
@@ -389,6 +441,21 @@
         if (video.readyState >= video.HAVE_CURRENT_DATA) {
             videoTexture.needsUpdate = true;
         }
+
+        // Pink UFO: wide elliptical flight path high above the scene
+        ufoTime += 0.008;
+        const ufoAngle = ufoTime;
+        ufo.position.x = Math.cos(ufoAngle) * 18;
+        ufo.position.z = Math.sin(ufoAngle) * 12 - 5;
+        ufo.position.y = 12 + Math.sin(ufoTime * 1.7) * 1.5;
+        ufo.rotation.y = -ufoAngle + Math.PI / 2;
+        ufo.rotation.z = Math.sin(ufoTime * 1.2) * 0.12;
+        // blink lights
+        const blink = 0.5 + 0.5 * Math.sin(ufoTime * 8);
+        ufoLights.forEach((l, i) => {
+            l.material.opacity = 1;
+            l.scale.setScalar(0.7 + 0.5 * Math.sin(ufoTime * 6 + i));
+        });
 
         // Original robot: circle → forward/back → left/right
         robotTime += 0.014;
