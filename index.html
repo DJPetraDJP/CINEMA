@@ -150,7 +150,7 @@
 
     camera.position.set(0, 6, 25);
 
-    // ===== PINK-RED ROLLERBLADE ROBOT WITH TRAY =====
+    // ===== PINK-RED ROLLERBLADE ROBOT WITH TRAY (original) =====
     const robot = new THREE.Group();
 
     const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff3366 });
@@ -264,19 +264,17 @@
     const leftBlade = makeRollerblade(-0.3);
     const rightBlade = makeRollerblade(0.3);
 
-    // Safe zone in front of sofas
-    robot.position.set(0, 0, 5);
+    // Original start position and path
+    robot.position.set(5, 0, 8);
     scene.add(robot);
 
-    // Robot: slow left ↔ right, then circle (restored previous movement)
     let robotTime = 0;
-    const safeCenterX = 0;
-    const safeCenterZ = 5;
-    const leftRightRange = 8;
-    const circleRadius = 3.5;
-    const leftRightDuration = 14;
-    const circleDuration = 10;
-    const fullCycle = leftRightDuration + circleDuration;
+    const robotCenterX = 5;
+    const robotCenterZ = 8;
+    const PHASE_CIRCLE = 0;
+    const PHASE_FORWARD_BACK = 1;
+    const PHASE_LEFT_RIGHT = 2;
+    const phaseDuration = 8;
 
     // Controls
     let yaw = 0, isDragging = false, prevX = 0;
@@ -392,38 +390,46 @@
             videoTexture.needsUpdate = true;
         }
 
-        // Slow left ↔ right, then circle — clear of sofas
-        robotTime += 0.008;
-        const tCycle = robotTime % fullCycle;
+        // Original robot: circle → forward/back → left/right
+        robotTime += 0.014;
+        const cycle = Math.floor(robotTime / phaseDuration) % 3;
+        const t = robotTime % phaseDuration;
 
         let targetX, targetZ, faceAngle;
 
-        if (tCycle < leftRightDuration) {
-            const progress = tCycle / leftRightDuration;
-            const xOffset = Math.sin(progress * Math.PI * 2) * leftRightRange;
-            targetX = safeCenterX + xOffset;
-            targetZ = safeCenterZ;
-            const goingRight = Math.cos(progress * Math.PI * 2) > 0;
-            faceAngle = goingRight ? -Math.PI / 2 : Math.PI / 2;
-        } else {
-            const progress = (tCycle - leftRightDuration) / circleDuration;
-            const angle = progress * Math.PI * 2;
-            targetX = safeCenterX + Math.cos(angle) * circleRadius;
-            targetZ = safeCenterZ + Math.sin(angle) * circleRadius;
+        if (cycle === PHASE_CIRCLE) {
+            const angle = (t / phaseDuration) * Math.PI * 2;
+            const radius = 6;
+            targetX = robotCenterX + Math.cos(angle) * radius;
+            targetZ = robotCenterZ + Math.sin(angle) * radius;
             faceAngle = -angle + Math.PI / 2;
+        } else if (cycle === PHASE_FORWARD_BACK) {
+            const progress = t / phaseDuration;
+            const zOffset = Math.sin(progress * Math.PI * 2) * 7;
+            targetX = robotCenterX;
+            targetZ = robotCenterZ + zOffset;
+            const movingForward = Math.cos(progress * Math.PI * 2) < 0;
+            faceAngle = movingForward ? Math.PI : 0;
+        } else {
+            const progress = t / phaseDuration;
+            const xOffset = Math.sin(progress * Math.PI * 2) * 8;
+            targetX = robotCenterX + xOffset;
+            targetZ = robotCenterZ;
+            const movingRight = Math.cos(progress * Math.PI * 2) > 0;
+            faceAngle = movingRight ? -Math.PI / 2 : Math.PI / 2;
         }
 
         robot.position.x = targetX;
         robot.position.z = targetZ;
         robot.rotation.y = faceAngle;
-        robot.position.y = Math.abs(Math.sin(robotTime * 4)) * 0.08;
-        robot.rotation.z = Math.sin(robotTime * 2) * 0.05;
+        robot.position.y = Math.abs(Math.sin(robotTime * 5)) * 0.1;
+        robot.rotation.z = Math.sin(robotTime * 2.5) * 0.07;
 
         leftBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.2;
+            if (i > 0) c.rotation.x += 0.28;
         });
         rightBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.2;
+            if (i > 0) c.rotation.x += 0.28;
         });
 
         const dir = new THREE.Vector3();
