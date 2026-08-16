@@ -127,12 +127,12 @@
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-    // ===== VIDEO LOOP ON SCREEN (Djppp.mp4) =====
+    // ===== VIDEO LOOP ON SCREEN (Djppp.mp4) — muted =====
     const video = document.createElement('video');
     video.src = videoURL;
     video.crossOrigin = 'anonymous';
     video.loop = true;
-    video.muted = false;
+    video.muted = true;
     video.playsInline = true;
     video.preload = 'auto';
 
@@ -320,7 +320,7 @@
     btn('left', v => moveL = v);
     btn('right', v => moveR = v);
 
-    // ===== VIDEO + AUDIO TOGGLE ON SCREEN TAP =====
+    // ===== VIDEO (muted) + AUDIO TOGGLE ON SCREEN TAP =====
     let playing = false;
     const audio = new Audio();
     audio.src = audioURL;
@@ -342,8 +342,6 @@
                 movieTitleDiv.style.display = 'none';
             }).catch(err => {
                 console.error("Play failed:", err);
-                // Mobile often requires muted video first
-                video.muted = true;
                 video.play().then(() => {
                     playing = true;
                     movieTitleDiv.style.display = 'none';
