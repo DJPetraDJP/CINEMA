@@ -262,18 +262,22 @@
     const leftBlade = makeRollerblade(-0.3);
     const rightBlade = makeRollerblade(0.3);
 
-    robot.position.set(5, 0, 8);
+    // Safe zone: in front of sofas (sofas start around z=12)
+    // Path stays at z ≈ 3–8 so the robot never drives through sofas
+    robot.position.set(0, 0, 5);
     scene.add(robot);
 
-    // Robot animation state – cycles through different movement patterns
+    // Robot animation: slow left ↔ right, then circle, repeat
+    // Safe area: x −9…9, z 3…8 (clear of sofas at z≥12)
     let robotTime = 0;
-    const robotCenterX = 5;
-    const robotCenterZ = 8;
-    // Phase durations (in robotTime units)
-    const PHASE_CIRCLE = 0;
-    const PHASE_FORWARD_BACK = 1;
-    const PHASE_LEFT_RIGHT = 2;
-    const phaseDuration = 8; // each pattern lasts ~8 time units
+    const safeCenterX = 0;
+    const safeCenterZ = 5;
+    const leftRightRange = 8;   // x from −8 to +8
+    const circleRadius = 3.5;   // circle stays within z 1.5…8.5
+    // Phase 0 = left-right (slow), Phase 1 = circle
+    const leftRightDuration = 14; // slower left-right
+    const circleDuration = 10;
+    const fullCycle = leftRightDuration + circleDuration;
 
     // Controls
     let yaw = 0, isDragging = false, prevX = 0;
@@ -316,16 +320,14 @@
 
     function toggleAudio() {
         if (!playing) {
-            // Try to play
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
                     playing = true;
                     movieTitleDiv.style.display = 'none';
-                    screen.material.color.setHex(0x222222); // slight visual feedback
+                    screen.material.color.setHex(0x222222);
                 }).catch(err => {
                     console.error("Audio play failed:", err);
-                    // Fallback: try again after a short delay (sometimes helps on mobile)
                     setTimeout(() => {
                         audio.play().then(() => {
                             playing = true;
@@ -344,7 +346,6 @@
         }
     }
 
-    // Handle both mouse click and touch
     function onScreenInteract(clientX, clientY) {
         const ray = new THREE.Raycaster();
         const mouse = new THREE.Vector2(
@@ -352,7 +353,6 @@
             -(clientY / window.innerHeight) * 2 + 1
         );
         ray.setFromCamera(mouse, camera);
-
         if (ray.intersectObject(screen).length > 0) {
             toggleAudio();
         }
@@ -362,7 +362,6 @@
         onScreenInteract(e.clientX, e.clientY);
     });
 
-    // Better support for mobile / touch devices
     let touchStartX = 0, touchStartY = 0;
     renderer.domElement.addEventListener('touchstart', e => {
         if (e.touches.length === 1) {
@@ -376,8 +375,6 @@
             const touch = e.changedTouches[0];
             const dx = Math.abs(touch.clientX - touchStartX);
             const dy = Math.abs(touch.clientY - touchStartY);
-
-            // Only count as a "tap" if the finger barely moved
             if (dx < 12 && dy < 12) {
                 onScreenInteract(touch.clientX, touch.clientY);
             }
@@ -393,54 +390,43 @@
     function animate() {
         requestAnimationFrame(animate);
 
-        // Robot movement: cycles through circle → forward/back → left/right
-        robotTime += 0.014;
-        const cycle = Math.floor(robotTime / phaseDuration) % 3;
-        const t = robotTime % phaseDuration; // progress within current phase (0 .. phaseDuration)
+        // Slow movement: left ↔ right, then circle — always in front of sofas
+        robotTime += 0.008; // slower overall
+        const tCycle = robotTime % fullCycle;
 
         let targetX, targetZ, faceAngle;
 
-        if (cycle === PHASE_CIRCLE) {
-            // Circle around center
-            const angle = (t / phaseDuration) * Math.PI * 2;
-            const radius = 6;
-            targetX = robotCenterX + Math.cos(angle) * radius;
-            targetZ = robotCenterZ + Math.sin(angle) * radius;
-            faceAngle = -angle + Math.PI / 2;
-        } else if (cycle === PHASE_FORWARD_BACK) {
-            // Straight line: back and forth along Z (toward / away from screen)
-            // t 0→half: go forward (smaller z), half→end: go back
-            const progress = t / phaseDuration; // 0..1
-            const zOffset = Math.sin(progress * Math.PI * 2) * 7; // oscillates -7..+7
-            targetX = robotCenterX;
-            targetZ = robotCenterZ + zOffset;
-            // face direction of travel
-            const movingForward = Math.cos(progress * Math.PI * 2) < 0;
-            faceAngle = movingForward ? Math.PI : 0;
+        if (tCycle < leftRightDuration) {
+            // Phase: slow left and right (one full round trip)
+            const progress = tCycle / leftRightDuration; // 0 → 1
+            // smooth: go right (0→0.5), then left (0.5→1)
+            const xOffset = Math.sin(progress * Math.PI * 2) * leftRightRange;
+            targetX = safeCenterX + xOffset;
+            targetZ = safeCenterZ;
+            const goingRight = Math.cos(progress * Math.PI * 2) > 0;
+            faceAngle = goingRight ? -Math.PI / 2 : Math.PI / 2;
         } else {
-            // Left and right along X
-            const progress = t / phaseDuration;
-            const xOffset = Math.sin(progress * Math.PI * 2) * 8;
-            targetX = robotCenterX + xOffset;
-            targetZ = robotCenterZ;
-            const movingRight = Math.cos(progress * Math.PI * 2) > 0;
-            faceAngle = movingRight ? -Math.PI / 2 : Math.PI / 2;
+            // Phase: circle in the safe zone
+            const progress = (tCycle - leftRightDuration) / circleDuration; // 0 → 1
+            const angle = progress * Math.PI * 2;
+            targetX = safeCenterX + Math.cos(angle) * circleRadius;
+            targetZ = safeCenterZ + Math.sin(angle) * circleRadius;
+            faceAngle = -angle + Math.PI / 2;
         }
 
         robot.position.x = targetX;
         robot.position.z = targetZ;
         robot.rotation.y = faceAngle;
-        // small bounce / roll feel
-        robot.position.y = Math.abs(Math.sin(robotTime * 5)) * 0.1;
-        // slight lean into movement
-        robot.rotation.z = Math.sin(robotTime * 2.5) * 0.07;
+        // light bounce
+        robot.position.y = Math.abs(Math.sin(robotTime * 4)) * 0.08;
+        robot.rotation.z = Math.sin(robotTime * 2) * 0.05;
 
         // spin wheels
         leftBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.28;
+            if (i > 0) c.rotation.x += 0.2;
         });
         rightBlade.children.forEach((c, i) => {
-            if (i > 0) c.rotation.x += 0.28;
+            if (i > 0) c.rotation.x += 0.2;
         });
 
         const dir = new THREE.Vector3();
