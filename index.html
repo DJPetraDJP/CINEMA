@@ -135,6 +135,142 @@
 
     camera.position.set(0, 6, 25);
 
+    // ===== PINK-RED ROLLERBLADE ROBOT WITH TRAY =====
+    const robot = new THREE.Group();
+
+    // Body (pink-red)
+    const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff3366 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 0.7), bodyMat);
+    body.position.y = 1.5;
+    robot.add(body);
+
+    // Head
+    const head = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.85, 0.75), bodyMat);
+    head.position.y = 2.55;
+    robot.add(head);
+
+    // Big eyes (white + black pupils)
+    const eyeWhiteMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const eyePupilMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
+    function makeEye(x) {
+        const eyeGroup = new THREE.Group();
+        const white = new THREE.Mesh(new THREE.SphereGeometry(0.22, 12, 12), eyeWhiteMat);
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), eyePupilMat);
+        pupil.position.z = 0.14;
+        eyeGroup.add(white);
+        eyeGroup.add(pupil);
+        eyeGroup.position.set(x, 2.6, 0.38);
+        robot.add(eyeGroup);
+        return eyeGroup;
+    }
+    makeEye(-0.22);
+    makeEye(0.22);
+
+    // Antenna
+    const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6), new THREE.MeshLambertMaterial({ color: 0xff6699 }));
+    antenna.position.y = 3.15;
+    robot.add(antenna);
+    const antennaBall = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshLambertMaterial({ color: 0xffcc00 }));
+    antennaBall.position.y = 3.35;
+    robot.add(antennaBall);
+
+    // Arms
+    const armMat = new THREE.MeshLambertMaterial({ color: 0xff4477 });
+    const leftArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), armMat);
+    leftArm.position.set(-0.75, 1.6, 0);
+    robot.add(leftArm);
+    const rightArm = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), armMat);
+    rightArm.position.set(0.75, 1.6, 0);
+    robot.add(rightArm);
+
+    // Tray (held in front)
+    const tray = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.08, 1.0),
+        new THREE.MeshLambertMaterial({ color: 0xdddddd })
+    );
+    tray.position.set(0, 1.95, 0.7);
+    robot.add(tray);
+
+    // Colorful glasses on tray
+    const glassColors = [0xff4444, 0x44ff88, 0x4488ff, 0xffaa00, 0xff66cc];
+    for (let i = 0; i < 5; i++) {
+        const glass = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.12, 0.1, 0.35, 10),
+            new THREE.MeshLambertMaterial({ color: glassColors[i], transparent: true, opacity: 0.85 })
+        );
+        glass.position.set(-0.55 + i * 0.28, 2.18, 0.55);
+        robot.add(glass);
+        // liquid surface
+        const liquid = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.09, 0.09, 0.04, 8),
+            new THREE.MeshLambertMaterial({ color: glassColors[i] })
+        );
+        liquid.position.set(-0.55 + i * 0.28, 2.28, 0.55);
+        robot.add(liquid);
+    }
+
+    // Bowl of chips
+    const bowl = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.22, 0.18, 12),
+        new THREE.MeshLambertMaterial({ color: 0xf5d0a0 })
+    );
+    bowl.position.set(0.45, 2.12, 0.85);
+    robot.add(bowl);
+    // Chips (small yellow-orange discs)
+    const chipMat = new THREE.MeshLambertMaterial({ color: 0xffcc44 });
+    for (let i = 0; i < 8; i++) {
+        const chip = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.025, 8), chipMat);
+        const angle = (i / 8) * Math.PI * 2;
+        chip.position.set(
+            0.45 + Math.cos(angle) * 0.12,
+            2.22 + (i % 3) * 0.03,
+            0.85 + Math.sin(angle) * 0.12
+        );
+        chip.rotation.x = Math.random() * 0.5;
+        chip.rotation.z = Math.random() * 0.5;
+        robot.add(chip);
+    }
+
+    // Legs
+    const legMat = new THREE.MeshLambertMaterial({ color: 0xee2255 });
+    const leftLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.7, 0.35), legMat);
+    leftLeg.position.set(-0.3, 0.7, 0);
+    robot.add(leftLeg);
+    const rightLeg = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.7, 0.35), legMat);
+    rightLeg.position.set(0.3, 0.7, 0);
+    robot.add(rightLeg);
+
+    // Rollerblades (wheels)
+    const wheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
+    const bootMat = new THREE.MeshLambertMaterial({ color: 0xff6699 });
+    function makeRollerblade(x) {
+        const blade = new THREE.Group();
+        const boot = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.25, 0.7), bootMat);
+        boot.position.y = 0.15;
+        blade.add(boot);
+        // four wheels
+        for (let i = 0; i < 4; i++) {
+            const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.08, 10), wheelMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(0, -0.05, -0.25 + i * 0.18);
+            blade.add(wheel);
+        }
+        blade.position.set(x, 0.1, 0);
+        robot.add(blade);
+        return blade;
+    }
+    const leftBlade = makeRollerblade(-0.3);
+    const rightBlade = makeRollerblade(0.3);
+
+    robot.position.set(5, 0, 8);
+    scene.add(robot);
+
+    // Robot animation state
+    let robotTime = 0;
+    const robotCenterX = 5;
+    const robotCenterZ = 8;
+    const robotRadius = 6;
+
     // Controls
     let yaw = 0, isDragging = false, prevX = 0;
     renderer.domElement.addEventListener('touchstart', e => {
@@ -252,6 +388,28 @@
 
     function animate() {
         requestAnimationFrame(animate);
+
+        // Robot movement: circle + slight left-right and forward-back wobble
+        robotTime += 0.012;
+        const angle = robotTime;
+        const radius = robotRadius + Math.sin(robotTime * 0.7) * 1.5;
+        robot.position.x = robotCenterX + Math.cos(angle) * radius;
+        robot.position.z = robotCenterZ + Math.sin(angle) * radius;
+        // face movement direction
+        robot.rotation.y = -angle + Math.PI / 2;
+        // small bounce / roll feel
+        robot.position.y = Math.abs(Math.sin(robotTime * 4)) * 0.08;
+        // slight lean
+        robot.rotation.z = Math.sin(robotTime * 2) * 0.06;
+
+        // spin wheels a bit for visual effect
+        leftBlade.children.forEach((c, i) => {
+            if (i > 0) c.rotation.x += 0.25;
+        });
+        rightBlade.children.forEach((c, i) => {
+            if (i > 0) c.rotation.x += 0.25;
+        });
+
         const dir = new THREE.Vector3();
         if (moveF) dir.z -= 1;
         if (moveB) dir.z += 1;
