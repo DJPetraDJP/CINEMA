@@ -64,14 +64,32 @@
     scene.add(sun);
     scene.add(new THREE.AmbientLight(0xaaccff, 0.7));
 
-    const sand = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
+    const sand = new THREE.Mesh(new THREE.PlaneGeometry(180, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
     sand.rotation.x = -Math.PI / 2;
     scene.add(sand);
 
+    // Left ocean (existing)
     const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.set(-35, 0.2, -10);
     scene.add(ocean);
+
+    // ===== LAKE ON THE RIGHT =====
+    const lake = new THREE.Mesh(
+        new THREE.CircleGeometry(18, 32),
+        new THREE.MeshLambertMaterial({ color: 0x1a9ad9, transparent: true, opacity: 0.9 })
+    );
+    lake.rotation.x = -Math.PI / 2;
+    lake.position.set(38, 0.25, 5);
+    scene.add(lake);
+    // soft shore ring
+    const shore = new THREE.Mesh(
+        new THREE.RingGeometry(17.5, 19.5, 32),
+        new THREE.MeshLambertMaterial({ color: 0xd4b88a, side: THREE.DoubleSide })
+    );
+    shore.rotation.x = -Math.PI / 2;
+    shore.position.set(38, 0.22, 5);
+    scene.add(shore);
 
     function createPinkTree(x, z) {
         const group = new THREE.Group();
@@ -84,6 +102,7 @@
         scene.add(group);
     }
     createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
+    createPinkTree(48, -8); createPinkTree(52, 12);
 
     function createSofa(x, z) {
         const sofa = new THREE.Group();
@@ -96,6 +115,40 @@
         scene.add(sofa);
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
+
+    // ===== THAI LONGTAIL BOAT on the right lake =====
+    const boat = new THREE.Group();
+    const wood = new THREE.MeshLambertMaterial({ color: 0xc4a060 });
+    const woodDark = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
+    const paint = new THREE.MeshLambertMaterial({ color: 0xe85a2a });
+    const paintBlue = new THREE.MeshLambertMaterial({ color: 0x2a6ebd });
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.55, 8.5), wood);
+    hull.position.y = 0.35; boat.add(hull);
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.2, 8), wood);
+    bow.rotation.x = -Math.PI / 2;
+    bow.position.set(0, 0.35, 5.2); boat.add(bow);
+    const prow = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.8, 6), paint);
+    prow.position.set(0, 1.2, 5.8); prow.rotation.x = 0.4; boat.add(prow);
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 2.5), paintBlue);
+    roof.position.set(0, 1.15, 0.5); boat.add(roof);
+    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6), woodDark);
+    postL.position.set(-0.4, 0.8, 0.5); boat.add(postL);
+    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6), woodDark);
+    postR.position.set(0.4, 0.8, 0.5); boat.add(postR);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 4.5, 6), woodDark);
+    pole.position.set(0, 1.5, -4.2); pole.rotation.x = -0.55; boat.add(pole);
+    const engine = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.35, 0.55), new THREE.MeshLambertMaterial({ color: 0x333333 }));
+    engine.position.set(0, 0.55, -5.5); boat.add(engine);
+    const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.08, 8), new THREE.MeshLambertMaterial({ color: 0x666666 }));
+    prop.rotation.x = Math.PI / 2;
+    prop.position.set(0, 0.35, -5.9); boat.add(prop);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 7.5), paint);
+    stripe.position.set(0, 0.55, 0.2); boat.add(stripe);
+    boat.position.set(38, 0.55, 5);
+    boat.scale.set(0.85, 0.85, 0.85);
+    boat.rotation.y = Math.PI / 2;
+    scene.add(boat);
+    let boatTime = 0;
 
     const video = document.createElement('video');
     video.src = videoURL;
@@ -354,6 +407,16 @@
         beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
 
+        // Boat on right lake — slow circle + gentle bob, propeller spins
+        boatTime += 0.008;
+        const lakeR = 8;
+        boat.position.x = 38 + Math.cos(boatTime * 0.4) * lakeR;
+        boat.position.z = 5 + Math.sin(boatTime * 0.4) * lakeR;
+        boat.position.y = 0.55 + Math.sin(boatTime * 2.5) * 0.1;
+        boat.rotation.y = -boatTime * 0.4 + Math.PI / 2;
+        boat.rotation.z = Math.sin(boatTime * 1.8) * 0.05;
+        prop.rotation.z += 0.45;
+
         blueTime += 0.004;
         const cycleLen = 48;
         const bt = blueTime % cycleLen;
@@ -408,7 +471,8 @@
         if (dir.length() > 0) {
             dir.normalize().applyQuaternion(camera.quaternion); dir.y = 0;
             camera.position.addScaledVector(dir, speed);
-            camera.position.x = Math.max(-40, Math.min(40, camera.position.x));
+            // further right allowed so you can walk to the lake
+            camera.position.x = Math.max(-40, Math.min(55, camera.position.x));
             camera.position.z = Math.max(-5, Math.min(35, camera.position.z));
         }
         renderer.render(scene, camera);
