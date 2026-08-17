@@ -93,12 +93,10 @@
     scene.add(sun);
     scene.add(new THREE.AmbientLight(0xaaccff, 0.7));
 
-    // Sand (larger for bigger room)
     const sand = new THREE.Mesh(new THREE.PlaneGeometry(200, 150), new THREE.MeshLambertMaterial({ color: 0xe0c090 }));
     sand.rotation.x = -Math.PI / 2;
     scene.add(sand);
 
-    // Ocean, Trees, Sofas, Screen
     const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.set(-35, 0.2, -10);
@@ -128,7 +126,6 @@
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-    // ===== VIDEO LOOP ON SCREEN (Ddjjpp.mp4) — muted =====
     const video = document.createElement('video');
     video.src = videoURL;
     video.crossOrigin = 'anonymous';
@@ -149,7 +146,7 @@
     screen.position.set(0, 8.5, -32);
     scene.add(screen);
 
-    // ===== RIGHT WALL + FRAMED DJPpic =====
+    // Right wall + framed picture
     const wallMat = new THREE.MeshLambertMaterial({ color: 0xf5e6d3 });
     const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.4, 16, 28), wallMat);
     rightWall.position.set(32, 8, 0);
@@ -191,169 +188,47 @@
     pictureGroup.position.set(31.7, 6.5, 4);
     scene.add(pictureGroup);
 
-    // ===== ROUND PINK SOFAS WITH BLACK STRIPES (circle seating, right side) =====
-    function createRoundSofa(x, z, rotY) {
-        const g = new THREE.Group();
-        const pink = new THREE.MeshLambertMaterial({ color: 0xff69b4 });
-        const pinkDark = new THREE.MeshLambertMaterial({ color: 0xff4d94 });
-        const black = new THREE.MeshLambertMaterial({ color: 0x1a1a1a });
-        // curved-looking base (box segments feel roundish in circle layout)
-        const seat = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.7, 1.8), pink);
-        seat.position.y = 0.85;
-        g.add(seat);
-        // black stripe on seat
-        const stripe = new THREE.Mesh(new THREE.BoxGeometry(3.25, 0.12, 0.35), black);
-        stripe.position.set(0, 1.22, 0.2);
-        g.add(stripe);
-        // backrest
-        const back = new THREE.Mesh(new THREE.BoxGeometry(3.2, 1.5, 0.4), pinkDark);
-        back.position.set(0, 1.7, -0.7);
-        g.add(back);
-        // black stripe on back
-        const backStripe = new THREE.Mesh(new THREE.BoxGeometry(3.25, 0.2, 0.42), black);
-        backStripe.position.set(0, 1.9, -0.7);
-        g.add(backStripe);
-        g.position.set(x, 0, z);
-        g.rotation.y = rotY;
-        scene.add(g);
-    }
-    // circle of 5 sofas facing center, on the right near the wall
-    const sofaCircleCX = 24;
-    const sofaCircleCZ = 2;
-    const sofaCircleR = 5.5;
-    for (let i = 0; i < 5; i++) {
-        const a = (i / 5) * Math.PI * 2;
-        const sx = sofaCircleCX + Math.cos(a) * sofaCircleR;
-        const sz = sofaCircleCZ + Math.sin(a) * sofaCircleR;
-        // face toward circle center
-        const rotY = a + Math.PI;
-        createRoundSofa(sx, sz, rotY);
-    }
-
-    // ===== COLORFUL FLYING FISH (right side) =====
+    // ===== ONLY: 6 colorful flying fish (right side) =====
     const fishList = [];
     const fishColors = [0xff3366, 0x44ffaa, 0x4488ff, 0xffcc00, 0xff66ff, 0x00e5ff];
     function createFish(color) {
         const f = new THREE.Group();
         const mat = new THREE.MeshLambertMaterial({ color: color });
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), mat);
-        body.scale.set(1.6, 0.7, 0.9);
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), mat);
+        body.scale.set(1.8, 0.75, 1.0);
         f.add(body);
-        const tail = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 6), mat);
+        const tail = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.6, 6), mat);
         tail.rotation.z = Math.PI / 2;
-        tail.position.x = -0.55;
+        tail.position.x = -0.7;
         f.add(tail);
-        const fin = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.3, 5), mat);
-        fin.position.set(0, 0.25, 0);
+        const fin = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.35, 5), mat);
+        fin.position.set(0, 0.3, 0);
         f.add(fin);
-        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.07, 6, 6), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-        eye.position.set(0.35, 0.08, 0.2);
+        const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+        eye.position.set(0.45, 0.1, 0.25);
         f.add(eye);
-        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.035, 6, 6), new THREE.MeshLambertMaterial({ color: 0x111111 }));
-        pupil.position.set(0.4, 0.08, 0.24);
+        const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.045, 6, 6), new THREE.MeshLambertMaterial({ color: 0x111111 }));
+        pupil.position.set(0.52, 0.1, 0.3);
         f.add(pupil);
         scene.add(f);
         return f;
     }
     for (let i = 0; i < 6; i++) {
-        const fish = createFish(fishColors[i % fishColors.length]);
+        const fish = createFish(fishColors[i]);
         fishList.push({
             mesh: fish,
-            phase: Math.random() * Math.PI * 2,
-            speed: 0.4 + Math.random() * 0.5,
-            radius: 3 + Math.random() * 4,
-            baseY: 2.5 + Math.random() * 4,
-            cx: 22 + Math.random() * 6,
-            cz: -4 + Math.random() * 10
+            phase: (i / 6) * Math.PI * 2,
+            speed: 0.55 + (i % 3) * 0.12,
+            radius: 4 + (i % 3),
+            baseY: 3 + (i % 4) * 0.8,
+            cx: 20 + (i % 3) * 2,
+            cz: -2 + (i % 4) * 2
         });
     }
 
-    // ===== BLUE ROBOT WITH TRAY (right corner, runs around) =====
-    const blueRobot = new THREE.Group();
-    const blueMat = new THREE.MeshLambertMaterial({ color: 0x3399ff });
-    const blueDark = new THREE.MeshLambertMaterial({ color: 0x2266cc });
-    const bBody = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 0.7), blueMat);
-    bBody.position.y = 1.5;
-    blueRobot.add(bBody);
-    const bHead = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.85, 0.75), blueMat);
-    bHead.position.y = 2.55;
-    blueRobot.add(bHead);
-    function makeBlueEye(x) {
-        const eg = new THREE.Group();
-        const w = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), new THREE.MeshLambertMaterial({ color: 0xffffff }));
-        const p = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 8), new THREE.MeshLambertMaterial({ color: 0x111111 }));
-        p.position.z = 0.14;
-        eg.add(w); eg.add(p);
-        eg.position.set(x, 2.6, 0.38);
-        blueRobot.add(eg);
-    }
-    makeBlueEye(-0.22); makeBlueEye(0.22);
-    const bAnt = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.35, 6), blueDark);
-    bAnt.position.y = 3.15;
-    blueRobot.add(bAnt);
-    const bAntBall = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshBasicMaterial({ color: 0x66ffff }));
-    bAntBall.position.y = 3.35;
-    blueRobot.add(bAntBall);
-    const bArmL = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), blueDark);
-    bArmL.position.set(-0.75, 1.6, 0);
-    blueRobot.add(bArmL);
-    const bArmR = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.9, 0.25), blueDark);
-    bArmR.position.set(0.75, 1.6, 0);
-    blueRobot.add(bArmR);
-    const bTray = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 1.0), new THREE.MeshLambertMaterial({ color: 0xeeeeee }));
-    bTray.position.set(0, 1.95, 0.7);
-    blueRobot.add(bTray);
-    // tasty items on tray: cakes / fruits / snacks
-    const treatColors = [0xff6688, 0xffcc44, 0x88ffaa, 0xff8844, 0xcc88ff];
-    for (let i = 0; i < 5; i++) {
-        const treat = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.14, 0.16, 0.2, 10),
-            new THREE.MeshLambertMaterial({ color: treatColors[i] })
-        );
-        treat.position.set(-0.5 + i * 0.25, 2.12, 0.55);
-        blueRobot.add(treat);
-        // frosting top
-        const top = new THREE.Mesh(
-            new THREE.SphereGeometry(0.1, 8, 8),
-            new THREE.MeshLambertMaterial({ color: 0xffffff })
-        );
-        top.position.set(-0.5 + i * 0.25, 2.25, 0.55);
-        top.scale.y = 0.5;
-        blueRobot.add(top);
-    }
-    // ice cream cone
-    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.35, 8), new THREE.MeshLambertMaterial({ color: 0xe8b060 }));
-    cone.position.set(0.5, 2.2, 0.85);
-    cone.rotation.x = Math.PI;
-    blueRobot.add(cone);
-    const scoop = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), new THREE.MeshLambertMaterial({ color: 0xff99cc }));
-    scoop.position.set(0.5, 2.42, 0.85);
-    blueRobot.add(scoop);
-    const bLegL = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.7, 0.35), blueDark);
-    bLegL.position.set(-0.3, 0.7, 0);
-    blueRobot.add(bLegL);
-    const bLegR = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.7, 0.35), blueDark);
-    bLegR.position.set(0.3, 0.7, 0);
-    blueRobot.add(bLegR);
-    // simple roller feet
-    const bWheelMat = new THREE.MeshLambertMaterial({ color: 0x222222 });
-    for (const wx of [-0.3, 0.3]) {
-        for (let wi = 0; wi < 3; wi++) {
-            const wh = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 8), bWheelMat);
-            wh.rotation.z = Math.PI / 2;
-            wh.position.set(wx, 0.1, -0.2 + wi * 0.2);
-            blueRobot.add(wh);
-        }
-    }
-    blueRobot.position.set(26, 0, -6);
-    scene.add(blueRobot);
-    let blueRobotTime = 0;
-    const blueCenterX = 25;
-    const blueCenterZ = -2;
-
     camera.position.set(0, 6, 25);
 
-    // ===== PINK UFO =====
+    // Pink UFO
     const ufo = new THREE.Group();
     const ufoPink = new THREE.MeshLambertMaterial({ color: 0xff66aa });
     const ufoPinkDark = new THREE.MeshLambertMaterial({ color: 0xee4488 });
@@ -391,7 +266,7 @@
     scene.add(ufo);
     let ufoTime = 0;
 
-    // ===== PINK-RED ROLLERBLADE ROBOT WITH TRAY (original) =====
+    // Original pink-red rollerblade robot
     const robot = new THREE.Group();
     const bodyMat = new THREE.MeshLambertMaterial({ color: 0xff3366 });
     const body = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.4, 0.7), bodyMat);
@@ -505,7 +380,6 @@
     const PHASE_LEFT_RIGHT = 2;
     const phaseDuration = 8;
 
-    // Controls
     let yaw = 0, isDragging = false, prevX = 0;
     renderer.domElement.addEventListener('touchstart', e => {
         if (e.touches.length === 1) {
@@ -618,7 +492,6 @@
             videoTexture.needsUpdate = true;
         }
 
-        // UFO (unchanged)
         ufoTime += 0.008;
         const heightWave = (Math.sin(ufoTime * 0.55) + 1) / 2;
         ufo.position.y = 2.2 + heightWave * 9;
@@ -632,26 +505,16 @@
             l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i));
         });
 
-        // Flying fish (right side)
-        fishList.forEach((f, i) => {
+        // 6 flying fish
+        fishList.forEach((f) => {
             const t = ufoTime * f.speed + f.phase;
             f.mesh.position.x = f.cx + Math.cos(t) * f.radius;
             f.mesh.position.z = f.cz + Math.sin(t) * f.radius * 0.7;
-            f.mesh.position.y = f.baseY + Math.sin(t * 2) * 0.8;
+            f.mesh.position.y = f.baseY + Math.sin(t * 2) * 0.9;
             f.mesh.rotation.y = -t + Math.PI / 2;
-            f.mesh.rotation.z = Math.sin(t * 3) * 0.25;
+            f.mesh.rotation.z = Math.sin(t * 3) * 0.3;
         });
 
-        // Blue robot runs in a corner loop (right side)
-        blueRobotTime += 0.016;
-        const ba = blueRobotTime;
-        blueRobot.position.x = blueCenterX + Math.cos(ba) * 4;
-        blueRobot.position.z = blueCenterZ + Math.sin(ba) * 3.5;
-        blueRobot.position.y = Math.abs(Math.sin(blueRobotTime * 6)) * 0.12;
-        blueRobot.rotation.y = -ba + Math.PI / 2;
-        blueRobot.rotation.z = Math.sin(blueRobotTime * 3) * 0.06;
-
-        // Original pink robot (unchanged)
         robotTime += 0.014;
         const cycle = Math.floor(robotTime / phaseDuration) % 3;
         const t = robotTime % phaseDuration;
