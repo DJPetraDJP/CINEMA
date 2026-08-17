@@ -73,9 +73,9 @@
     ocean.position.set(-35, 0.2, -10);
     scene.add(ocean);
 
-    const lakeCX = 20, lakeCZ = 8, lakeRadius = 11;
+    const lakeCX = 20, lakeCZ = 8;
     const lake = new THREE.Mesh(
-        new THREE.CircleGeometry(lakeRadius, 32),
+        new THREE.CircleGeometry(11, 32),
         new THREE.MeshLambertMaterial({ color: 0x1a9ad9, transparent: true, opacity: 0.92 })
     );
     lake.rotation.x = -Math.PI / 2;
@@ -99,9 +99,9 @@
         group.position.set(x, 0, z);
         scene.add(group);
     }
-    createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5); createPinkTree(30, -5);
+    createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
+    createPinkTree(30, -5);
 
-    const sofaPositions = [];
     function createSofa(x, z) {
         const sofa = new THREE.Group();
         const base = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.8, 2.2), new THREE.MeshLambertMaterial({ color: 0xff69b4 }));
@@ -111,11 +111,9 @@
         sofa.rotation.y = Math.PI;
         sofa.position.set(x, 0, z);
         scene.add(sofa);
-        sofaPositions.push({ x, z, r: 3.2 });
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-    // Boat
     const boat = new THREE.Group();
     const wood = new THREE.MeshLambertMaterial({ color: 0xc4a060 });
     const woodDark = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
@@ -124,7 +122,8 @@
     const hull = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.55, 8.5), wood);
     hull.position.y = 0.35; boat.add(hull);
     const bow = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.2, 8), wood);
-    bow.rotation.x = -Math.PI / 2; bow.position.set(0, 0.35, 5.2); boat.add(bow);
+    bow.rotation.x = -Math.PI / 2;
+    bow.position.set(0, 0.35, 5.2); boat.add(bow);
     const prow = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.8, 6), paint);
     prow.position.set(0, 1.2, 5.8); prow.rotation.x = 0.4; boat.add(prow);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 2.5), paintBlue);
@@ -138,41 +137,15 @@
     const engine = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.35, 0.55), new THREE.MeshLambertMaterial({ color: 0x333333 }));
     engine.position.set(0, 0.55, -5.5); boat.add(engine);
     const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.08, 8), new THREE.MeshLambertMaterial({ color: 0x666666 }));
-    prop.rotation.x = Math.PI / 2; prop.position.set(0, 0.35, -5.9); boat.add(prop);
+    prop.rotation.x = Math.PI / 2;
+    prop.position.set(0, 0.35, -5.9); boat.add(prop);
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 7.5), paint);
     stripe.position.set(0, 0.55, 0.2); boat.add(stripe);
     boat.position.set(lakeCX, 0.6, lakeCZ);
     boat.scale.set(0.7, 0.7, 0.7);
+    boat.rotation.y = Math.PI / 2;
     scene.add(boat);
     let boatTime = 0;
-
-    // ===== TWO SWANS on the lake =====
-    function makeSwan() {
-        const s = new THREE.Group();
-        const white = new THREE.MeshLambertMaterial({ color: 0xffffff });
-        const orange = new THREE.MeshLambertMaterial({ color: 0xff8833 });
-        const body = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 10), white);
-        body.scale.set(1.2, 0.85, 1.5);
-        body.position.y = 0.35;
-        s.add(body);
-        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.9, 8), white);
-        neck.position.set(0, 0.85, 0.55);
-        neck.rotation.x = -0.6;
-        s.add(neck);
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 10), white);
-        head.position.set(0, 1.25, 0.85);
-        s.add(head);
-        const beak = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.25, 6), orange);
-        beak.rotation.x = Math.PI / 2;
-        beak.position.set(0, 1.2, 1.05);
-        s.add(beak);
-        return s;
-    }
-    const swan1 = makeSwan();
-    const swan2 = makeSwan();
-    scene.add(swan1);
-    scene.add(swan2);
-    let swanTime = 0;
 
     const video = document.createElement('video');
     video.src = videoURL;
@@ -353,28 +326,6 @@
     const PHASE_CIRCLE = 0, PHASE_FORWARD_BACK = 1, PHASE_LEFT_RIGHT = 2;
     const phaseDuration = 8;
 
-    // Keep ground characters out of lake + sofas; separate robots
-    function keepOutOfObstacles(pos) {
-        // lake
-        const ldx = pos.x - lakeCX, ldz = pos.z - lakeCZ;
-        const ld = Math.sqrt(ldx * ldx + ldz * ldz);
-        if (ld < lakeRadius + 1.5 && ld > 0.01) {
-            const push = (lakeRadius + 1.5) / ld;
-            pos.x = lakeCX + ldx * push;
-            pos.z = lakeCZ + ldz * push;
-        }
-        // sofas
-        for (const s of sofaPositions) {
-            const dx = pos.x - s.x, dz = pos.z - s.z;
-            const d = Math.sqrt(dx * dx + dz * dz);
-            if (d < s.r && d > 0.01) {
-                const push = s.r / d;
-                pos.x = s.x + dx * push;
-                pos.z = s.z + dz * push;
-            }
-        }
-    }
-
     let yaw = 0, isDragging = false, prevX = 0;
     renderer.domElement.addEventListener('touchstart', e => {
         if (e.touches.length === 1) { isDragging = true; prevX = e.touches[0].clientX; }
@@ -442,16 +393,15 @@
         requestAnimationFrame(animate);
         if (video.readyState >= video.HAVE_CURRENT_DATA) videoTexture.needsUpdate = true;
 
-        // UFO stays higher — less clipping through trees/robots
         ufoTime += 0.008;
         const heightWave = (Math.sin(ufoTime * 0.55) + 1) / 2;
-        ufo.position.y = 6 + heightWave * 7;
+        ufo.position.y = 2.2 + heightWave * 9;
         const ufoAngle = ufoTime * 0.45;
-        ufo.position.x = Math.cos(ufoAngle) * 9;
-        ufo.position.z = Math.sin(ufoAngle) * 7 + 2;
+        ufo.position.x = Math.cos(ufoAngle) * 7;
+        ufo.position.z = Math.sin(ufoAngle) * 6 + 2;
         ufo.rotation.y = -ufoAngle + Math.PI / 2;
         ufo.rotation.z = Math.sin(ufoTime * 0.9) * 0.08;
-        beam.material.opacity = 0.12 + (1 - heightWave) * 0.15;
+        beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
 
         boatTime += 0.01;
@@ -462,18 +412,6 @@
         boat.rotation.y = -boatTime * 0.45 + Math.PI / 2;
         boat.rotation.z = Math.sin(boatTime * 1.8) * 0.05;
         prop.rotation.z += 0.5;
-
-        // Swans swim opposite sides of lake
-        swanTime += 0.012;
-        const sR = 3.5;
-        swan1.position.x = lakeCX + Math.cos(swanTime * 0.5) * sR;
-        swan1.position.z = lakeCZ + Math.sin(swanTime * 0.5) * sR;
-        swan1.position.y = 0.35 + Math.sin(swanTime * 2) * 0.05;
-        swan1.rotation.y = -swanTime * 0.5 + Math.PI / 2;
-        swan2.position.x = lakeCX + Math.cos(swanTime * 0.5 + Math.PI) * (sR + 1.2);
-        swan2.position.z = lakeCZ + Math.sin(swanTime * 0.5 + Math.PI) * (sR + 1.2);
-        swan2.position.y = 0.35 + Math.sin(swanTime * 2 + 1) * 0.05;
-        swan2.rotation.y = -swanTime * 0.5 + Math.PI / 2 + Math.PI;
 
         blueTime += 0.004;
         const cycleLen = 48;
@@ -488,13 +426,11 @@
         } else {
             const p = (bt - 34) / 14; bx = 0 + p * 14; bz = 0 + p * 10;
         }
-        const bpos = { x: bx, z: bz };
-        keepOutOfObstacles(bpos);
-        const dx = bpos.x - bluePrevX;
-        const dz = bpos.z - bluePrevZ;
+        const dx = bx - bluePrevX;
+        const dz = bz - bluePrevZ;
         if (dx * dx + dz * dz > 1e-8) blueRobot.rotation.y = Math.atan2(dx, dz);
-        bluePrevX = bpos.x; bluePrevZ = bpos.z;
-        blueRobot.position.set(bpos.x, 0, bpos.z);
+        bluePrevX = bx; bluePrevZ = bz;
+        blueRobot.position.set(bx, 0, bz);
         blueRobot.rotation.z = Math.sin(blueTime * 2) * 0.04;
 
         robotTime += 0.014;
@@ -517,20 +453,8 @@
             targetZ = robotCenterZ;
             faceAngle = Math.cos(progress * Math.PI * 2) > 0 ? -Math.PI / 2 : Math.PI / 2;
         }
-        const rpos = { x: targetX, z: targetZ };
-        keepOutOfObstacles(rpos);
-        // separate pink from blue
-        const rdx = rpos.x - blueRobot.position.x;
-        const rdz = rpos.z - blueRobot.position.z;
-        const rd = Math.sqrt(rdx * rdx + rdz * rdz);
-        if (rd < 3.5 && rd > 0.01) {
-            const push = 3.5 / rd;
-            rpos.x = blueRobot.position.x + rdx * push;
-            rpos.z = blueRobot.position.z + rdz * push;
-            keepOutOfObstacles(rpos);
-        }
-        robot.position.x = rpos.x;
-        robot.position.z = rpos.z;
+        robot.position.x = targetX;
+        robot.position.z = targetZ;
         robot.rotation.y = faceAngle;
         robot.position.y = Math.abs(Math.sin(robotTime * 5)) * 0.1;
         robot.rotation.z = Math.sin(robotTime * 2.5) * 0.07;
