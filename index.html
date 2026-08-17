@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
     <title>Open Air Cinema</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <style>
         body { margin: 0; overflow: hidden; background: #000; touch-action: none; }
         #title, #movie-title {
@@ -115,7 +113,6 @@
 
     camera.position.set(0, 6, 25);
 
-    // UFO
     const ufo = new THREE.Group();
     const ufoPink = new THREE.MeshLambertMaterial({ color: 0xff66aa });
     const ufoPinkDark = new THREE.MeshLambertMaterial({ color: 0xee4488 });
@@ -146,7 +143,7 @@
     scene.add(ufo);
     let ufoTime = 0;
 
-    // BLUE ROBOT
+    // BLUE ROBOT — eyes/tray on local +Z = front
     const blueRobot = new THREE.Group();
     const blueMat = new THREE.MeshLambertMaterial({ color: 0x2299ff });
     const blueDark = new THREE.MeshLambertMaterial({ color: 0x1166cc });
@@ -199,6 +196,7 @@
     blueRobot.position.set(8, 0, 10);
     scene.add(blueRobot);
     let blueTime = 0;
+    let bluePrevX = 8, bluePrevZ = 10;
 
     // PINK ROBOT
     const robot = new THREE.Group();
@@ -352,36 +350,39 @@
         beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
 
-        // Blue robot path — ONLY change: face forward (+ Math.PI to previous angles)
+        // Blue robot path (same route) — face from real movement so front (tray) leads
         blueTime += 0.004;
         const cycleLen = 48;
         const bt = blueTime % cycleLen;
-        let bx, bz, bFace;
+        let bx, bz;
         if (bt < 14) {
             const p = bt / 14;
             bx = 14 - p * 28;
             bz = 10;
-            bFace = -Math.PI / 2; // was PI/2 — now faces direction of travel (left)
         } else if (bt < 24) {
             const p = (bt - 14) / 10;
             bx = -14;
             bz = 10 - p * 16;
-            bFace = 0; // was PI — now faces toward -Z travel
         } else if (bt < 34) {
             const p = (bt - 24) / 10;
             bx = -14 + p * 14;
             bz = -6 + p * 6;
-            bFace = Math.PI / 2; // was -PI/2 — faces rightward travel
         } else {
             const p = (bt - 34) / 14;
             bx = 0 + p * 14;
             bz = 0 + p * 10;
-            bFace = Math.PI / 2; // faces rightward travel
         }
+        const dx = bx - bluePrevX;
+        const dz = bz - bluePrevZ;
+        if (dx * dx + dz * dz > 1e-8) {
+            // local +Z is front (eyes/tray) → point it along movement
+            blueRobot.rotation.y = Math.atan2(dx, dz);
+        }
+        bluePrevX = bx;
+        bluePrevZ = bz;
         blueRobot.position.x = bx;
         blueRobot.position.z = bz;
         blueRobot.position.y = 0;
-        blueRobot.rotation.y = bFace;
         blueRobot.rotation.z = Math.sin(blueTime * 2) * 0.04;
 
         robotTime += 0.014;
