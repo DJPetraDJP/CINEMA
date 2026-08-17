@@ -68,27 +68,26 @@
     sand.rotation.x = -Math.PI / 2;
     scene.add(sand);
 
-    // Left ocean (existing)
     const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.set(-35, 0.2, -10);
     scene.add(ocean);
 
-    // ===== LAKE ON THE RIGHT =====
+    // LAKE closer on the RIGHT (near sofas / pink tree)
+    const lakeCX = 20, lakeCZ = 8;
     const lake = new THREE.Mesh(
-        new THREE.CircleGeometry(18, 32),
-        new THREE.MeshLambertMaterial({ color: 0x1a9ad9, transparent: true, opacity: 0.9 })
+        new THREE.CircleGeometry(11, 32),
+        new THREE.MeshLambertMaterial({ color: 0x1a9ad9, transparent: true, opacity: 0.92 })
     );
     lake.rotation.x = -Math.PI / 2;
-    lake.position.set(38, 0.25, 5);
+    lake.position.set(lakeCX, 0.28, lakeCZ);
     scene.add(lake);
-    // soft shore ring
     const shore = new THREE.Mesh(
-        new THREE.RingGeometry(17.5, 19.5, 32),
+        new THREE.RingGeometry(10.5, 12, 32),
         new THREE.MeshLambertMaterial({ color: 0xd4b88a, side: THREE.DoubleSide })
     );
     shore.rotation.x = -Math.PI / 2;
-    shore.position.set(38, 0.22, 5);
+    shore.position.set(lakeCX, 0.24, lakeCZ);
     scene.add(shore);
 
     function createPinkTree(x, z) {
@@ -102,7 +101,7 @@
         scene.add(group);
     }
     createPinkTree(-18, -15); createPinkTree(22, -18); createPinkTree(-25, 5);
-    createPinkTree(48, -8); createPinkTree(52, 12);
+    createPinkTree(30, -5);
 
     function createSofa(x, z) {
         const sofa = new THREE.Group();
@@ -116,7 +115,7 @@
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-    // ===== THAI LONGTAIL BOAT on the right lake =====
+    // THAI LONGTAIL BOAT on lake
     const boat = new THREE.Group();
     const wood = new THREE.MeshLambertMaterial({ color: 0xc4a060 });
     const woodDark = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
@@ -144,8 +143,8 @@
     prop.position.set(0, 0.35, -5.9); boat.add(prop);
     const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 7.5), paint);
     stripe.position.set(0, 0.55, 0.2); boat.add(stripe);
-    boat.position.set(38, 0.55, 5);
-    boat.scale.set(0.85, 0.85, 0.85);
+    boat.position.set(lakeCX, 0.6, lakeCZ);
+    boat.scale.set(0.7, 0.7, 0.7);
     boat.rotation.y = Math.PI / 2;
     scene.add(boat);
     let boatTime = 0;
@@ -407,15 +406,14 @@
         beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
 
-        // Boat on right lake — slow circle + gentle bob, propeller spins
-        boatTime += 0.008;
-        const lakeR = 8;
-        boat.position.x = 38 + Math.cos(boatTime * 0.4) * lakeR;
-        boat.position.z = 5 + Math.sin(boatTime * 0.4) * lakeR;
-        boat.position.y = 0.55 + Math.sin(boatTime * 2.5) * 0.1;
-        boat.rotation.y = -boatTime * 0.4 + Math.PI / 2;
+        boatTime += 0.01;
+        const lakeR = 5;
+        boat.position.x = lakeCX + Math.cos(boatTime * 0.45) * lakeR;
+        boat.position.z = lakeCZ + Math.sin(boatTime * 0.45) * lakeR;
+        boat.position.y = 0.6 + Math.sin(boatTime * 2.5) * 0.1;
+        boat.rotation.y = -boatTime * 0.45 + Math.PI / 2;
         boat.rotation.z = Math.sin(boatTime * 1.8) * 0.05;
-        prop.rotation.z += 0.45;
+        prop.rotation.z += 0.5;
 
         blueTime += 0.004;
         const cycleLen = 48;
@@ -471,8 +469,7 @@
         if (dir.length() > 0) {
             dir.normalize().applyQuaternion(camera.quaternion); dir.y = 0;
             camera.position.addScaledVector(dir, speed);
-            // further right allowed so you can walk to the lake
-            camera.position.x = Math.max(-40, Math.min(55, camera.position.x));
+            camera.position.x = Math.max(-40, Math.min(40, camera.position.x));
             camera.position.z = Math.max(-5, Math.min(35, camera.position.z));
         }
         renderer.render(scene, camera);
