@@ -51,8 +51,8 @@
     const videoURL = "https://raw.githubusercontent.com/DJPetraDJP/CINEMA/main/Ddjjpp.mp4";
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog(0x88aaff, 50, 160);
-    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 250);
+    scene.fog = new THREE.Fog(0x88aaff, 40, 150);
+    const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 200);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -68,20 +68,10 @@
     sand.rotation.x = -Math.PI / 2;
     scene.add(sand);
 
-    // Near ocean (left of cinema)
     const ocean = new THREE.Mesh(new THREE.PlaneGeometry(80, 60), new THREE.MeshLambertMaterial({ color: 0x0088dd, transparent: true, opacity: 0.85 }));
     ocean.rotation.x = -Math.PI / 2;
     ocean.position.set(-35, 0.2, -10);
     scene.add(ocean);
-
-    // Horizon water BEHIND the screen
-    const horizonWater = new THREE.Mesh(
-        new THREE.PlaneGeometry(120, 50),
-        new THREE.MeshLambertMaterial({ color: 0x0077cc, transparent: true, opacity: 0.9 })
-    );
-    horizonWater.rotation.x = -Math.PI / 2;
-    horizonWater.position.set(0, 0.15, -55);
-    scene.add(horizonWater);
 
     function createPinkTree(x, z) {
         const group = new THREE.Group();
@@ -107,41 +97,6 @@
     }
     createSofa(-10, 12); createSofa(10, 13); createSofa(-12, 20); createSofa(12, 21); createSofa(0, 17);
 
-    // ===== THAI LONGTAIL BOAT — behind screen at horizon =====
-    const boat = new THREE.Group();
-    const wood = new THREE.MeshLambertMaterial({ color: 0xc4a060 });
-    const woodDark = new THREE.MeshLambertMaterial({ color: 0x8b6914 });
-    const paint = new THREE.MeshLambertMaterial({ color: 0xe85a2a });
-    const paintBlue = new THREE.MeshLambertMaterial({ color: 0x2a6ebd });
-    const hull = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.55, 8.5), wood);
-    hull.position.y = 0.35; boat.add(hull);
-    const bow = new THREE.Mesh(new THREE.ConeGeometry(0.55, 2.2, 8), wood);
-    bow.rotation.x = -Math.PI / 2;
-    bow.position.set(0, 0.35, 5.2); boat.add(bow);
-    const prow = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 1.8, 6), paint);
-    prow.position.set(0, 1.2, 5.8); prow.rotation.x = 0.4; boat.add(prow);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 2.5), paintBlue);
-    roof.position.set(0, 1.15, 0.5); boat.add(roof);
-    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6), woodDark);
-    postL.position.set(-0.4, 0.8, 0.5); boat.add(postL);
-    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 6), woodDark);
-    postR.position.set(0.4, 0.8, 0.5); boat.add(postR);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 4.5, 6), woodDark);
-    pole.position.set(0, 1.5, -4.2); pole.rotation.x = -0.55; boat.add(pole);
-    const engine = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.35, 0.55), new THREE.MeshLambertMaterial({ color: 0x333333 }));
-    engine.position.set(0, 0.55, -5.5); boat.add(engine);
-    const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, 0.08, 8), new THREE.MeshLambertMaterial({ color: 0x666666 }));
-    prop.rotation.x = Math.PI / 2;
-    prop.position.set(0, 0.35, -5.9); boat.add(prop);
-    const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.25, 0.12, 7.5), paint);
-    stripe.position.set(0, 0.55, 0.2); boat.add(stripe);
-    // Far behind screen (screen z=-32), on horizon water
-    boat.position.set(-18, 0.5, -58);
-    boat.scale.set(1.4, 1.4, 1.4);
-    boat.rotation.y = Math.PI / 2;
-    scene.add(boat);
-    let boatTime = 0;
-
     const video = document.createElement('video');
     video.src = videoURL;
     video.crossOrigin = 'anonymous';
@@ -155,12 +110,12 @@
     videoTexture.magFilter = THREE.LinearFilter;
     videoTexture.format = THREE.RGBFormat;
 
-    const screenMesh = new THREE.Mesh(
+    const screen = new THREE.Mesh(
         new THREE.PlaneGeometry(24, 13.5),
         new THREE.MeshBasicMaterial({ map: videoTexture, side: THREE.DoubleSide })
     );
-    screenMesh.position.set(0, 8.5, -32);
-    scene.add(screenMesh);
+    screen.position.set(0, 8.5, -32);
+    scene.add(screen);
 
     camera.position.set(0, 6, 25);
 
@@ -170,10 +125,10 @@
     const ufoDomeMat = new THREE.MeshLambertMaterial({ color: 0xffccee, transparent: true, opacity: 0.9 });
     const ufoLightMat = new THREE.MeshBasicMaterial({ color: 0xffff66 });
     ufo.add(new THREE.Mesh(new THREE.CylinderGeometry(3.2, 4.0, 0.55, 28), ufoPink));
-    const rimU = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.3, 0.25, 28), ufoPinkDark);
-    rimU.position.y = -0.35; ufo.add(rimU);
-    const domeU = new THREE.Mesh(new THREE.SphereGeometry(1.6, 18, 14, 0, Math.PI * 2, 0, Math.PI / 2), ufoDomeMat);
-    domeU.position.y = 0.28; ufo.add(domeU);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(4.0, 4.3, 0.25, 28), ufoPinkDark);
+    rim.position.y = -0.35; ufo.add(rim);
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(1.6, 18, 14, 0, Math.PI * 2, 0, Math.PI / 2), ufoDomeMat);
+    dome.position.y = 0.28; ufo.add(dome);
     const ufoAnt = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.7, 6), new THREE.MeshLambertMaterial({ color: 0xff99cc }));
     ufoAnt.position.y = 1.9; ufo.add(ufoAnt);
     const ufoAntBall = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 8), new THREE.MeshBasicMaterial({ color: 0xffee55 }));
@@ -363,7 +318,7 @@
         const ray = new THREE.Raycaster();
         const mouse = new THREE.Vector2((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
         ray.setFromCamera(mouse, camera);
-        if (ray.intersectObject(screenMesh).length > 0) togglePlayback();
+        if (ray.intersectObject(screen).length > 0) togglePlayback();
     }
     renderer.domElement.addEventListener('click', e => onScreenInteract(e.clientX, e.clientY));
     let touchStartX = 0, touchStartY = 0;
@@ -398,15 +353,6 @@
         ufo.rotation.z = Math.sin(ufoTime * 0.9) * 0.08;
         beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
-
-        // Boat only at horizon — far behind screen, drifts left/right on distant water
-        boatTime += 0.005;
-        boat.position.x = -18 + Math.sin(boatTime * 0.3) * 22;
-        boat.position.z = -58;
-        boat.position.y = 0.5 + Math.sin(boatTime * 2) * 0.06;
-        boat.rotation.y = Math.PI / 2 + Math.sin(boatTime * 0.15) * 0.1;
-        boat.rotation.z = Math.sin(boatTime * 1.4) * 0.03;
-        prop.rotation.z += 0.35;
 
         blueTime += 0.004;
         const cycleLen = 48;
