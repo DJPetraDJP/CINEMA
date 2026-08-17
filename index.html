@@ -146,7 +146,7 @@
     scene.add(ufo);
     let ufoTime = 0;
 
-    // BLUE ROBOT — larger, on ground, starts visible near front-right
+    // BLUE ROBOT
     const blueRobot = new THREE.Group();
     const blueMat = new THREE.MeshLambertMaterial({ color: 0x2299ff });
     const blueDark = new THREE.MeshLambertMaterial({ color: 0x1166cc });
@@ -196,7 +196,6 @@
             blueRobot.add(wh);
         }
     }
-    // start on ground, clearly in view (front-right of pink robot area)
     blueRobot.position.set(8, 0, 10);
     scene.add(blueRobot);
     let blueTime = 0;
@@ -353,7 +352,7 @@
         beam.material.opacity = 0.15 + (1 - heightWave) * 0.2;
         ufoLights.forEach((l, i) => { l.scale.setScalar(0.8 + 0.5 * Math.sin(ufoTime * 7 + i)); });
 
-        // Blue robot on ground: slow right→left→back→right, through middle
+        // Blue robot path — ONLY change: face forward (+ Math.PI to previous angles)
         blueTime += 0.004;
         const cycleLen = 48;
         const bt = blueTime % cycleLen;
@@ -362,26 +361,26 @@
             const p = bt / 14;
             bx = 14 - p * 28;
             bz = 10;
-            bFace = Math.PI / 2;
+            bFace = -Math.PI / 2; // was PI/2 — now faces direction of travel (left)
         } else if (bt < 24) {
             const p = (bt - 14) / 10;
             bx = -14;
             bz = 10 - p * 16;
-            bFace = Math.PI;
+            bFace = 0; // was PI — now faces toward -Z travel
         } else if (bt < 34) {
             const p = (bt - 24) / 10;
             bx = -14 + p * 14;
             bz = -6 + p * 6;
-            bFace = -Math.PI / 2;
+            bFace = Math.PI / 2; // was -PI/2 — faces rightward travel
         } else {
             const p = (bt - 34) / 14;
             bx = 0 + p * 14;
             bz = 0 + p * 10;
-            bFace = -Math.PI / 2;
+            bFace = Math.PI / 2; // faces rightward travel
         }
         blueRobot.position.x = bx;
         blueRobot.position.z = bz;
-        blueRobot.position.y = 0; // always on the floor
+        blueRobot.position.y = 0;
         blueRobot.rotation.y = bFace;
         blueRobot.rotation.z = Math.sin(blueTime * 2) * 0.04;
 
